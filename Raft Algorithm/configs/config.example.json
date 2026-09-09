@@ -1,0 +1,23 @@
+{
+  "cluster_size": 50,
+  "policy_mode": "llm",
+  "learned_policy_path": "runs/policies/llm_mappo_policy.json",
+  "heartbeat_interval": 0.12,
+  "tick_interval": 0.02,
+  "election_timeout_min": 0.35,
+  "election_timeout_max": 0.75,
+  "adaptive_timeout_min": 0.18,
+  "adaptive_timeout_max": 0.95,
+  "status_interval": 0.2,
+  "random_seed": 7,
+  "dashboard_host": "127.0.0.1",
+  "dashboard_port": 8000,
+  "metrics_dir": "runs",
+  "graded_node_conditions": true,
+  "network": {
+    "base_latency_ms": 30,
+    "latency_jitter_ms": 20,
+    "packet_loss": 0.0,
+    "partitions": []
+  }
+}

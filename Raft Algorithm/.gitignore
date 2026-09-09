@@ -1,0 +1,17 @@
+.env
+.env.*
+!.env.example
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.tmp/
+node_data/
+logs/
+*.log
+.vscode/
+.idea/
+build/
+dist/
+*.egg-info/

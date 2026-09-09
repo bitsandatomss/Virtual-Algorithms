@@ -1,0 +1,40 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "rlraft"
+version = "0.1.0"
+authors = [
+  { name="dwan-ith" },
+]
+description = "Multi-Agent Reinforcement Learning for Raft Consensus Timeout Optimization"
+readme = "README.md"
+requires-python = ">=3.8"
+dependencies = [
+    "torch>=2.0.0",
+    "numpy",
+]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+]
+
+[project.urls]
+"Homepage" = "https://github.com/dwan-ith/RL-Raft"
+
+[project.scripts]
+rlraft = "rlraft.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["rlraft*"]
+
+[tool.pytest.ini_options]
+# The third-party `fast_array_utils` pytest plugin imports anndata at
+# collection time, whose strict pydantic Settings object rejects unrelated
+# *_API_KEY env vars AND prints their values into the traceback. Blocking
+# the plugin keeps `pytest` usable in key-rich environments; our suite is
+# unittest-style and needs no third-party plugins.
+addopts = ["-p", "no:fast_array_utils"]

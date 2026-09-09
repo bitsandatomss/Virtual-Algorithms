@@ -1,0 +1,139 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>RL-Raft</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+  <header>
+    <div class="header-left">
+      <div>
+        <h1>RL-Raft</h1>
+        <div id="subtitle">Waiting for cluster...</div>
+      </div>
+      <nav class="nav-tabs">
+        <button id="tab-dashboard" class="tab-btn active" onclick="switchPage('dashboard')">Cluster Dashboard</button>
+        <button id="tab-pipeline" class="tab-btn" onclick="switchPage('pipeline')">Election Pipeline</button>
+      </nav>
+    </div>
+    <button onclick="sendCommand({action:'client_command', value:'doc-update-' + Date.now()})">Append Log Entry</button>
+  </header>
+
+  <!-- Page 1: Cluster Dashboard -->
+  <main id="page-dashboard">
+    <div class="controls left-panel">
+      <section>
+        <h2>Nodes</h2>
+        <div id="nodes" class="nodes"></div>
+      </section>
+      <section>
+        <h2>Recent Events</h2>
+        <div id="events" class="events"></div>
+      </section>
+    </div>
+    <div class="controls right-panel">
+      <section>
+        <h2>Context</h2>
+        <p style="margin:0;color:var(--muted);line-height:1.45;font-size:13px;">
+          This simulates a concurrent Raft environment using an RL meta-controller. Agents
+          dynamically learn network timeout policies under stress.
+        </p>
+      </section>
+      <section>
+        <h2>Metrics</h2>
+        <div id="metrics" class="metrics"></div>
+      </section>
+      <section>
+        <h2>Chaos Controls</h2>
+        <div class="controls">
+          <div class="row">
+            <label>Node<select id="nodeSelect"></select></label>
+            <button class="danger" onclick="nodeAction('crash')">Crash</button>
+            <button class="good" onclick="nodeAction('restart')">Restart</button>
+          </div>
+          <label>Base latency ms<input id="latency" type="number" min="0" value="30"></label>
+          <label>Jitter ms<input id="jitter" type="number" min="0" value="20"></label>
+          <label>Packet loss 0.0-1.0<input id="loss" type="number" min="0" max="1" step="0.05" value="0"></label>
+          <button onclick="updateNetwork()">Apply Network</button>
+          <div class="row">
+            <button class="secondary" onclick="majorityPartition()">Partition 3 | 2</button>
+            <button class="secondary" onclick="sendCommand({action:'heal'})">Heal</button>
+          </div>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <!-- Page 2: Election Pipeline -->
+  <main id="page-pipeline" class="hidden">
+    <div class="controls left-panel">
+      <section>
+        <div class="pipeline-header-row">
+          <h2>Election Funnel History</h2>
+          <select id="electionSelect" onchange="selectElection(this.value)"></select>
+        </div>
+        <div id="election-funnel" class="election-funnel">
+          <div class="pipeline-placeholder">No election history recorded yet. Trigger a timeout or partition to start an election.</div>
+        </div>
+      </section>
+    </div>
+    <div class="controls right-panel">
+      <section>
+        <h2>How Raft Prevents Unnecessary Elections</h2>
+        <p style="margin:0 0 12px;color:var(--muted);line-height:1.5;font-size:13px;">
+          To prevent multiple follower nodes from constantly timing out, splitting votes, and triggering inefficient elections, RL-Raft implements a <b>4-stage pipeline funnel</b>:
+        </p>
+        <div class="pipeline-explainer">
+          <div class="explainer-step">
+            <div class="explainer-num">1</div>
+            <div>
+              <b style="color:var(--ink);">Followers</b>
+              <p>All nodes in the cluster start as passive Followers listening for periodic Leader heartbeats (AppendEntries RPCs).</p>
+            </div>
+          </div>
+          <div class="explainer-step">
+            <div class="explainer-num">2</div>
+            <div>
+              <b style="color:var(--ink);">Pre-Candidates</b>
+              <p>When a Follower's randomized timeout expires, it does NOT increment its term immediately. It first becomes a <b>Pre-Candidate</b> to check if the network is healthy and a Leader is truly offline.</p>
+            </div>
+          </div>
+          <div class="explainer-step">
+            <div class="explainer-num">3</div>
+            <div>
+              <b style="color:var(--ink);">Candidates</b>
+              <p>Peer nodes deny pre-votes if they can still hear a Leader or if the Pre-Candidate has stale logs. Only if a Pre-Candidate gathers a <b>majority of pre-votes</b> does it officially advance to the <b>Candidate</b> state and increment the term.</p>
+            </div>
+          </div>
+          <div class="explainer-step">
+            <div class="explainer-num">4</div>
+            <div>
+              <b style="color:var(--ink);">Leader</b>
+              <p>The Candidate requests official votes. If it successfully secures a majority vote, it is crowned the <b>Leader</b> and starts sending heartbeats, transitioning everyone else back to Followers.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+      <section>
+        <h2>Pipeline Statistics</h2>
+        <div id="pipeline-stats" class="metrics">
+          <div class="metric">Total Elections<b id="pipe-total-elections">-</b></div>
+          <div class="metric">Split Vote rate<b id="pipe-split-rate">-</b></div>
+          <div class="metric">Pre-Votes Blocked<b id="pipe-blocked">-</b></div>
+          <div class="metric">Avg Election duration<b id="pipe-avg-dur">-</b></div>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <script src="app.js"></script>
+</body>
+
+</html>
